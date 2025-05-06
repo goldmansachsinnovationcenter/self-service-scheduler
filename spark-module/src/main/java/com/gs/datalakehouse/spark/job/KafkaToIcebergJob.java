@@ -74,7 +74,7 @@ public class KafkaToIcebergJob {
 
         Dataset<Row> parsedDF = spark.read()
                 .schema(schema)
-                .json(valueDF.select("json_value").as(String.class));
+                .json(valueDF.select("json_value").as("string"));
 
         Dataset<Row> transformedDF = parsedDF
                 .withColumnRenamed("id", "record_id")
