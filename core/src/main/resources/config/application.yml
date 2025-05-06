@@ -1,0 +1,47 @@
+# Data Lakehouse Service Configuration
+
+# HDFS Configuration
+hdfs:
+  uri: hdfs://localhost:9000
+  user: hdfs
+
+# Iceberg Configuration
+iceberg:
+  catalog-name: hadoop_catalog
+  catalog-type: hadoop
+  warehouse: hdfs://localhost:9000/warehouse
+  catalog-impl: org.apache.iceberg.hadoop.HadoopCatalog
+
+# Hive Metastore Configuration (optional)
+hive:
+  metastore:
+    uri: thrift://localhost:9083
+    warehouse: hdfs://localhost:9000/user/hive/warehouse
+
+# Kafka Configuration
+kafka:
+  bootstrap-servers: localhost:9092
+  consumer:
+    group-id: data-lakehouse-consumer
+    auto-offset-reset: earliest
+    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+# Trino Configuration
+trino:
+  host: localhost
+  port: 8080
+  user: trino
+  catalog: iceberg
+  schema: default
+
+# Spark Configuration
+spark:
+  master: yarn
+  deploy-mode: cluster
+  driver-memory: 2g
+  executor-memory: 2g
+  executor-cores: 2
+  num-executors: 2
+  yarn:
+    queue: default
