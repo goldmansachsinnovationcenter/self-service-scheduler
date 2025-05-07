@@ -49,7 +49,7 @@ public class DummyDataPopulator {
     /**
      * Populates the customers table with sample data.
      */
-    private void populateCustomers() throws SQLException {
+    protected void populateCustomers() throws SQLException {
         String sql = "INSERT INTO customers (customer_id, name, email, phone, address, registration_date) VALUES (?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = getConnection();
@@ -102,7 +102,7 @@ public class DummyDataPopulator {
     /**
      * Populates the products table with sample data.
      */
-    private void populateProducts() throws SQLException {
+    protected void populateProducts() throws SQLException {
         String sql = "INSERT INTO products (product_id, name, category, price, inventory, last_updated) VALUES (?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = getConnection();
@@ -155,7 +155,7 @@ public class DummyDataPopulator {
     /**
      * Populates the transactions table with sample data.
      */
-    private void populateTransactions() throws SQLException {
+    protected void populateTransactions() throws SQLException {
         String sql = "INSERT INTO transactions (transaction_id, customer_id, product_id, transaction_date, amount, payment_method) VALUES (?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = getConnection();
