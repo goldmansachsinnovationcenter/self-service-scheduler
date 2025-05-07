@@ -16,8 +16,11 @@ import static org.mockito.Mockito.*;
 
 class DummyDataPopulatorTest {
 
-    @InjectMocks
-    private DummyDataPopulator dummyDataPopulator;
+    @Mock
+    private Connection mockConnection;
+    
+    @Mock
+    private PreparedStatement mockStatement;
 
     @BeforeEach
     void setUp() {
@@ -26,10 +29,14 @@ class DummyDataPopulatorTest {
 
     @Test
     void testPopulateDummyData() {
-        DummyDataPopulator populator = new DummyDataPopulator();
+        DummyDataPopulator populator = spy(new DummyDataPopulator());
         
         try {
+            doReturn(mockConnection).when(populator).getConnection();
+            when(mockConnection.prepareStatement(anyString())).thenReturn(mockStatement);
+            
             populator.populateDummyData();
+            
             assertTrue(true, "Method should complete without exceptions");
         } catch (Exception e) {
             fail("Exception occurred while calling populateDummyData: " + e.getMessage());
@@ -38,52 +45,57 @@ class DummyDataPopulatorTest {
     
     @Test
     void testPopulateCustomers() throws Exception {
-        DummyDataPopulator populator = new DummyDataPopulator();
+        DummyDataPopulator populator = spy(new DummyDataPopulator());
+        
+        doReturn(mockConnection).when(populator).getConnection();
+        when(mockConnection.prepareStatement(anyString())).thenReturn(mockStatement);
         
         java.lang.reflect.Method method = DummyDataPopulator.class.getDeclaredMethod("populateCustomers");
         method.setAccessible(true);
         
-        try {
-            method.invoke(populator);
-            assertTrue(true, "Method should complete without exceptions");
-        } catch (Exception e) {
-            fail("Exception occurred while calling populateCustomers: " + e.getMessage());
-        }
+        method.invoke(populator);
+        
+        verify(mockConnection).prepareStatement(anyString());
+        verify(mockStatement, atLeastOnce()).addBatch();
+        verify(mockStatement).executeBatch();
     }
     
     @Test
     void testPopulateProducts() throws Exception {
-        DummyDataPopulator populator = new DummyDataPopulator();
+        DummyDataPopulator populator = spy(new DummyDataPopulator());
+        
+        doReturn(mockConnection).when(populator).getConnection();
+        when(mockConnection.prepareStatement(anyString())).thenReturn(mockStatement);
         
         java.lang.reflect.Method method = DummyDataPopulator.class.getDeclaredMethod("populateProducts");
         method.setAccessible(true);
         
-        try {
-            method.invoke(populator);
-            assertTrue(true, "Method should complete without exceptions");
-        } catch (Exception e) {
-            fail("Exception occurred while calling populateProducts: " + e.getMessage());
-        }
+        method.invoke(populator);
+        
+        verify(mockConnection).prepareStatement(anyString());
+        verify(mockStatement, atLeastOnce()).addBatch();
+        verify(mockStatement).executeBatch();
     }
     
     @Test
     void testPopulateTransactions() throws Exception {
-        DummyDataPopulator populator = new DummyDataPopulator();
+        DummyDataPopulator populator = spy(new DummyDataPopulator());
+        
+        doReturn(mockConnection).when(populator).getConnection();
+        when(mockConnection.prepareStatement(anyString())).thenReturn(mockStatement);
         
         java.lang.reflect.Method method = DummyDataPopulator.class.getDeclaredMethod("populateTransactions");
         method.setAccessible(true);
         
-        try {
-            method.invoke(populator);
-            assertTrue(true, "Method should complete without exceptions");
-        } catch (Exception e) {
-            fail("Exception occurred while calling populateTransactions: " + e.getMessage());
-        }
+        method.invoke(populator);
+        
+        verify(mockConnection).prepareStatement(anyString());
+        verify(mockStatement, atLeastOnce()).addBatch();
+        verify(mockStatement).executeBatch();
     }
     
     @Test
     void testGetConnection() throws Exception {
-        
         try {
             java.lang.reflect.Method method = DummyDataPopulator.class.getDeclaredMethod("getConnection");
             method.setAccessible(true);
