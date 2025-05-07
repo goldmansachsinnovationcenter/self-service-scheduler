@@ -34,7 +34,7 @@ class DummyDataPopulatorTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        populator = spy(new DummyDataPopulator());
+        populator = spy(new DummyDataPopulator(""));
     }
 
     /**
@@ -44,6 +44,10 @@ class DummyDataPopulatorTest {
         private boolean customersPopulated = false;
         private boolean productsPopulated = false;
         private boolean transactionsPopulated = false;
+        
+        public TestDummyDataPopulator() {
+            super("");
+        }
         
         @Override
         protected void populateCustomers() throws SQLException {
@@ -101,7 +105,7 @@ class DummyDataPopulatorTest {
     
     @Test
     void testConstructor() {
-        DummyDataPopulator populator = new DummyDataPopulator();
+        DummyDataPopulator populator = new DummyDataPopulator("");
         
         try {
             java.lang.reflect.Field jdbcUrlField = DummyDataPopulator.class.getDeclaredField("jdbcUrl");
@@ -207,6 +211,10 @@ class DummyDataPopulatorTest {
             boolean productsMethodCalled = false;
             boolean transactionsMethodCalled = false;
             
+            public SqlCapturingDataPopulator() {
+                super("");
+            }
+            
             @Override
             protected void populateCustomers() throws SQLException {
                 customersMethodCalled = true;
@@ -238,7 +246,7 @@ class DummyDataPopulatorTest {
     
     @Test
     void testGetConnection() throws SQLException {
-        DummyDataPopulator badPopulator = new DummyDataPopulator() {
+        DummyDataPopulator badPopulator = new DummyDataPopulator("") {
             @Override
             protected Connection getConnection() throws SQLException {
                 throw new SQLException("Connection failed");

@@ -1,0 +1,19 @@
+# Stubbed HDFS Configuration
+hdfs:
+  uri: file:///tmp/stub-hdfs
+  user: dummy
+
+# Iceberg Configuration with local catalog
+iceberg:
+  catalog-name: hadoop_catalog
+  catalog-type: hadoop
+  warehouse: file:///tmp/stub-hdfs/warehouse
+  catalog-impl: org.apache.iceberg.hadoop.HadoopCatalog
+
+# Trino Configuration (unchanged)
+trino:
+  host: localhost
+  port: 8080
+  user: trino
+  catalog: iceberg
+  schema: default
