@@ -1,6 +1,7 @@
 package com.gs.datalakehouse.core.util;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -23,12 +24,18 @@ public class DummyDataPopulator {
     private final String jdbcUrl;
     private final String username;
     private final String password;
+    private final boolean isStubMode;
 
     @Autowired
-    public DummyDataPopulator() {
+    public DummyDataPopulator(@Value("${spring.profiles.active:}") String activeProfiles) {
         this.jdbcUrl = "jdbc:trino://localhost:8080/iceberg/default";
         this.username = "trino";
         this.password = "";
+        this.isStubMode = activeProfiles.contains("stub-hdfs");
+        
+        if (this.isStubMode) {
+            System.out.println("DummyDataPopulator running in stub mode");
+        }
     }
 
     /**
@@ -37,12 +44,54 @@ public class DummyDataPopulator {
     @PostConstruct
     public void populateDummyData() {
         try {
+            createTablesIfNotExist();
+            
             populateCustomers();
             populateProducts();
             populateTransactions();
             System.out.println("Sample data populated successfully.");
         } catch (SQLException e) {
             System.err.println("Error populating sample data: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Creates the tables if they don't exist.
+     */
+    protected void createTablesIfNotExist() throws SQLException {
+        String[] createTableStatements = {
+            "CREATE TABLE IF NOT EXISTS customers (" +
+            "customer_id VARCHAR, " +
+            "name VARCHAR, " +
+            "email VARCHAR, " +
+            "phone VARCHAR, " +
+            "address VARCHAR, " +
+            "registration_date VARCHAR)",
+            
+            "CREATE TABLE IF NOT EXISTS products (" +
+            "product_id VARCHAR, " +
+            "name VARCHAR, " +
+            "category VARCHAR, " +
+            "price DOUBLE, " +
+            "inventory INTEGER, " +
+            "last_updated VARCHAR)",
+            
+            "CREATE TABLE IF NOT EXISTS transactions (" +
+            "transaction_id VARCHAR, " +
+            "customer_id VARCHAR, " +
+            "product_id VARCHAR, " +
+            "transaction_date VARCHAR, " +
+            "amount DOUBLE, " +
+            "payment_method VARCHAR)"
+        };
+        
+        try (Connection conn = getConnection()) {
+            for (String sql : createTableStatements) {
+                try (java.sql.Statement stmt = conn.createStatement()) {
+                    stmt.execute(sql);
+                    System.out.println("Table created or already exists: " + sql.substring(0, sql.indexOf("(")));
+                }
+            }
         }
     }
 
