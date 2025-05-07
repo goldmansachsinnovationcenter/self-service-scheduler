@@ -1,18 +1,41 @@
 package com.gs.datalakehouse.core.util;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for the DummyDataPopulator class.
- * Since we can't easily mock JDBC connections in the test environment,
- * we focus on testing the configuration and structure rather than actual database operations.
+ * Uses reflection and mocking to test the SQL operations without actual database connections.
  */
 class DummyDataPopulatorTest {
+
+    @Mock
+    private Connection mockConnection;
+
+    @Mock
+    private PreparedStatement mockStatement;
+
+    private DummyDataPopulator populator;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        populator = spy(new DummyDataPopulator());
+    }
 
     /**
      * Test subclass that overrides the database operations to avoid actual connections.
@@ -52,17 +75,28 @@ class DummyDataPopulatorTest {
 
     @Test
     void testPopulateDummyData() {
-        TestDummyDataPopulator populator = new TestDummyDataPopulator();
+        TestDummyDataPopulator testPopulator = new TestDummyDataPopulator();
         
         try {
-            populator.populateDummyData();
+            testPopulator.populateDummyData();
             
-            assertTrue(populator.isCustomersPopulated(), "Customers should be populated");
-            assertTrue(populator.isProductsPopulated(), "Products should be populated");
-            assertTrue(populator.isTransactionsPopulated(), "Transactions should be populated");
+            assertTrue(testPopulator.isCustomersPopulated(), "Customers should be populated");
+            assertTrue(testPopulator.isProductsPopulated(), "Products should be populated");
+            assertTrue(testPopulator.isTransactionsPopulated(), "Transactions should be populated");
         } catch (Exception e) {
             fail("Exception occurred while calling populateDummyData: " + e.getMessage());
         }
+    }
+    
+    @Test
+    void testPopulateDummyDataWithException() throws SQLException {
+        doThrow(new SQLException("Test exception")).when(populator).populateCustomers();
+        
+        populator.populateDummyData();
+        
+        verify(populator).populateCustomers();
+        verify(populator, never()).populateProducts();
+        verify(populator, never()).populateTransactions();
     }
     
     @Test
@@ -91,12 +125,71 @@ class DummyDataPopulatorTest {
     }
     
     @Test
+    void testPopulateCustomers() throws Exception {
+        doReturn(mockConnection).when(populator).getConnection();
+        when(mockConnection.prepareStatement(anyString())).thenReturn(mockStatement);
+        
+        Method method = DummyDataPopulator.class.getDeclaredMethod("populateCustomers");
+        method.setAccessible(true);
+        method.invoke(populator);
+        
+        verify(mockConnection).prepareStatement(contains("INSERT INTO customers"));
+        verify(mockStatement, times(5)).addBatch();
+        verify(mockStatement).executeBatch();
+        verify(mockStatement).close();
+        verify(mockConnection).close();
+    }
+    
+    @Test
+    void testPopulateProducts() throws Exception {
+        doReturn(mockConnection).when(populator).getConnection();
+        when(mockConnection.prepareStatement(anyString())).thenReturn(mockStatement);
+        
+        Method method = DummyDataPopulator.class.getDeclaredMethod("populateProducts");
+        method.setAccessible(true);
+        method.invoke(populator);
+        
+        verify(mockConnection).prepareStatement(contains("INSERT INTO products"));
+        verify(mockStatement, times(5)).addBatch();
+        verify(mockStatement).executeBatch();
+        verify(mockStatement).close();
+        verify(mockConnection).close();
+    }
+    
+    @Test
+    void testPopulateTransactions() throws Exception {
+        doReturn(mockConnection).when(populator).getConnection();
+        when(mockConnection.prepareStatement(anyString())).thenReturn(mockStatement);
+        
+        Method method = DummyDataPopulator.class.getDeclaredMethod("populateTransactions");
+        method.setAccessible(true);
+        method.invoke(populator);
+        
+        verify(mockConnection).prepareStatement(contains("INSERT INTO transactions"));
+        verify(mockStatement, times(8)).addBatch();
+        verify(mockStatement).executeBatch();
+        verify(mockStatement).close();
+        verify(mockConnection).close();
+    }
+    
+    @Test
+    void testPopulateCustomersWithSQLException() throws Exception {
+        doReturn(mockConnection).when(populator).getConnection();
+        when(mockConnection.prepareStatement(anyString())).thenThrow(new SQLException("Test exception"));
+        
+        Method method = DummyDataPopulator.class.getDeclaredMethod("populateCustomers");
+        method.setAccessible(true);
+        
+        assertThrows(InvocationTargetException.class, () -> method.invoke(populator));
+    }
+    
+    @Test
     void testSqlStatements() {
         try {
-            java.lang.reflect.Method populateCustomersMethod = DummyDataPopulator.class.getDeclaredMethod("populateCustomers");
-            java.lang.reflect.Method populateProductsMethod = DummyDataPopulator.class.getDeclaredMethod("populateProducts");
-            java.lang.reflect.Method populateTransactionsMethod = DummyDataPopulator.class.getDeclaredMethod("populateTransactions");
-            java.lang.reflect.Method getConnectionMethod = DummyDataPopulator.class.getDeclaredMethod("getConnection");
+            Method populateCustomersMethod = DummyDataPopulator.class.getDeclaredMethod("populateCustomers");
+            Method populateProductsMethod = DummyDataPopulator.class.getDeclaredMethod("populateProducts");
+            Method populateTransactionsMethod = DummyDataPopulator.class.getDeclaredMethod("populateTransactions");
+            Method getConnectionMethod = DummyDataPopulator.class.getDeclaredMethod("getConnection");
             
             assertNotNull(populateCustomersMethod, "populateCustomers method should exist");
             assertNotNull(populateProductsMethod, "populateProducts method should exist");
@@ -135,30 +228,57 @@ class DummyDataPopulatorTest {
             }
         }
         
-        SqlCapturingDataPopulator populator = new SqlCapturingDataPopulator();
-        populator.populateDummyData();
+        SqlCapturingDataPopulator testPopulator = new SqlCapturingDataPopulator();
+        testPopulator.populateDummyData();
         
-        assertTrue(populator.customersMethodCalled, "populateCustomers method should be called");
-        assertTrue(populator.productsMethodCalled, "populateProducts method should be called");
-        assertTrue(populator.transactionsMethodCalled, "populateTransactions method should be called");
+        assertTrue(testPopulator.customersMethodCalled, "populateCustomers method should be called");
+        assertTrue(testPopulator.productsMethodCalled, "populateProducts method should be called");
+        assertTrue(testPopulator.transactionsMethodCalled, "populateTransactions method should be called");
     }
     
     @Test
-    void testGetConnection() {
-        DummyDataPopulator populator = new DummyDataPopulator() {
+    void testGetConnection() throws SQLException {
+        DummyDataPopulator badPopulator = new DummyDataPopulator() {
             @Override
-            protected java.sql.Connection getConnection() throws SQLException {
-                return null;
+            protected Connection getConnection() throws SQLException {
+                throw new SQLException("Connection failed");
             }
         };
         
+        assertThrows(SQLException.class, () -> badPopulator.getConnection());
+        
         try {
-            java.lang.reflect.Method getConnectionMethod = DummyDataPopulator.class.getDeclaredMethod("getConnection");
+            Method getConnectionMethod = DummyDataPopulator.class.getDeclaredMethod("getConnection");
             getConnectionMethod.setAccessible(true);
             
-            assertNull(getConnectionMethod.invoke(populator));
+            try {
+                getConnectionMethod.invoke(populator);
+            } catch (InvocationTargetException e) {
+                if (!(e.getCause() instanceof SQLException)) {
+                    fail("Expected SQLException but got: " + e.getCause());
+                }
+            }
         } catch (Exception e) {
-            fail("Exception occurred while testing getConnection: " + e.getMessage());
+            if (!(e instanceof SQLException || e.getCause() instanceof SQLException)) {
+                fail("Unexpected exception: " + e);
+            }
         }
+    }
+    
+    @Test
+    void testStatementSetters() throws Exception {
+        doReturn(mockConnection).when(populator).getConnection();
+        when(mockConnection.prepareStatement(anyString())).thenReturn(mockStatement);
+        
+        Method method = DummyDataPopulator.class.getDeclaredMethod("populateCustomers");
+        method.setAccessible(true);
+        method.invoke(populator);
+        
+        verify(mockStatement, times(5)).setString(eq(1), anyString()); // customer_id
+        verify(mockStatement, times(5)).setString(eq(2), anyString()); // name
+        verify(mockStatement, times(5)).setString(eq(3), anyString()); // email
+        verify(mockStatement, times(5)).setString(eq(4), anyString()); // phone
+        verify(mockStatement, times(5)).setString(eq(5), anyString()); // address
+        verify(mockStatement, times(5)).setString(eq(6), anyString()); // registration_date
     }
 }
