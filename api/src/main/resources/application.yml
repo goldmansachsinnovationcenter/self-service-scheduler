@@ -1,0 +1,26 @@
+# Data Lakehouse API Configuration
+
+server:
+  port: 8080
+
+spring:
+  application:
+    name: data-lakehouse-api
+
+# Trino Configuration (copied from core module)
+trino:
+  host: localhost
+  port: 8080
+  user: trino
+  catalog: iceberg
+  schema: default
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    display-request-duration: true
