@@ -1,5 +1,12 @@
 package com.gs.datalakehouse.api.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +24,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/query")
+@Tag(name = "Query", description = "API for executing SQL queries against the data lakehouse")
 public class QueryController {
 
     @Value("${trino.host}")
@@ -40,8 +48,27 @@ public class QueryController {
      * @param queryRequest the query request containing the SQL
      * @return the query results
      */
+    @Operation(
+        summary = "Execute SQL query",
+        description = "Executes a SQL query against the data lakehouse using Trino and returns the results",
+        tags = {"Query"}
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Query executed successfully",
+            content = @Content(mediaType = "application/json")
+        ),
+        @ApiResponse(
+            responseCode = "500", 
+            description = "Error executing query",
+            content = @Content(mediaType = "application/json")
+        )
+    })
     @PostMapping
-    public ResponseEntity<Map<String, Object>> executeQuery(@Valid @RequestBody QueryRequest queryRequest) {
+    public ResponseEntity<Map<String, Object>> executeQuery(
+            @Parameter(description = "SQL query to execute", required = true)
+            @Valid @RequestBody QueryRequest queryRequest) {
         String sql = queryRequest.getSql();
         
         try {
@@ -84,7 +111,9 @@ public class QueryController {
     /**
      * Request class for SQL queries.
      */
+    @Schema(description = "SQL query request")
     public static class QueryRequest {
+        @Schema(description = "SQL query to execute", example = "SELECT * FROM default.customers LIMIT 10", required = true)
         private String sql;
 
         public String getSql() {
