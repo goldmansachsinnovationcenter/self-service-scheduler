@@ -232,7 +232,7 @@ public class DummyDataPopulator {
     /**
      * Gets a connection to the database.
      */
-    private Connection getConnection() throws SQLException {
+    protected Connection getConnection() throws SQLException {
         return DriverManager.getConnection(jdbcUrl, username, password);
     }
 }
