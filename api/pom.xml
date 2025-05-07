@@ -107,6 +107,12 @@
             <version>1.10.0</version>
             <scope>test</scope>
         </dependency>
+        <!-- Fix logback version mismatch -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>1.4.11</version>
+        </dependency>
     </dependencies>
 
     <build>

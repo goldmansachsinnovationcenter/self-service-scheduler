@@ -109,9 +109,8 @@ class QueryControllerIntegrationTest {
     @Test
     void testExecuteQueryError() throws Exception {
         try (MockedStatic<DriverManager> driverManagerMock = mockStatic(DriverManager.class)) {
-            driverManagerMock.when(() -> 
-                DriverManager.getConnection(anyString(), anyString(), eq(null)))
-                .thenThrow(new SQLException("Connection error"));
+            driverManagerMock.when(() -> DriverManager.getConnection(anyString(), anyString(), eq(null)))
+                             .thenThrow(new SQLException("Connection error"));
             
             QueryController.QueryRequest queryRequest = new QueryController.QueryRequest();
             queryRequest.setSql("INVALID SQL");
