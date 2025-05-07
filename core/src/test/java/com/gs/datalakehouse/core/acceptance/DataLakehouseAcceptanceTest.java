@@ -153,7 +153,7 @@ public class DataLakehouseAcceptanceTest {
         assertFalse(customersTable.get().getColumns().isEmpty());
         
         List<Column> columns = customersTable.get().getColumns();
-        assertTrue(columns.stream().anyMatch(c -> c.getName().equals("id")));
+        assertTrue(columns.stream().anyMatch(c -> c.getName().equals("customer_id")));
         assertTrue(columns.stream().anyMatch(c -> c.getName().equals("name")));
     }
 
